@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#F5F1E9" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>bettertimer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <p class="brand">bettertimer</p>
+      <p class="phase" id="phase" aria-live="polite">ON</p>
+
+      <button
+        type="button"
+        class="timer"
+        id="timer"
+        aria-label="Start or pause timer. Long press to reset."
+      >
+        <span class="timer__fill" id="fill" data-phase="on"></span>
+        <span class="timer__time" id="time">1:00</span>
+      </button>
+
+      <div class="meta">
+        <span class="lap" id="lap">Lap 0</span>
+        <p class="hint" id="hint">tap to start · hold to reset</p>
+        <div class="accent-row" aria-hidden="true">
+          <span class="a"></span>
+          <span class="b"></span>
+        </div>
+      </div>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>
