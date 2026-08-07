@@ -110,14 +110,14 @@
       master.gain.exponentialRampToValueAtTime(0.0001, now + startAt + dur);
       master.connect(audioCtx.destination);
 
-      for (const [type, level, detune] of [
-        ["square", 0.9, 0],
-        ["sawtooth", 0.6, -14],
+      for (const [level, detune, ratio] of [
+        [1.0, 0, 1],
+        [0.55, 0, 2],
       ]) {
         const osc = audioCtx.createOscillator();
         const g = audioCtx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, now + startAt);
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(freq * ratio, now + startAt);
         osc.detune.setValueAtTime(detune, now + startAt);
         g.gain.value = level;
         osc.connect(g);
@@ -127,8 +127,8 @@
       }
     }
 
-    blip(0, 1.6, 0.22);
-    blip(0.26, 1.45, 0.18);
+    blip(0, 1.7, 0.24);
+    blip(0.28, 1.5, 0.2);
 
     if (navigator.vibrate) {
       navigator.vibrate([70, 40, 70]);
