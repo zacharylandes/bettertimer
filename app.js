@@ -101,32 +101,37 @@
     if (!audioCtx) return;
 
     const now = audioCtx.currentTime;
-    const freq = phase === "on" ? 880 : 660;
+    const freq = phase === "on" ? 988 : 740;
 
-    const master = audioCtx.createGain();
-    master.gain.setValueAtTime(0.0001, now);
-    master.gain.exponentialRampToValueAtTime(0.95, now + 0.015);
-    master.gain.exponentialRampToValueAtTime(0.0001, now + 0.32);
-    master.connect(audioCtx.destination);
+    function blip(startAt, peak, dur) {
+      const master = audioCtx.createGain();
+      master.gain.setValueAtTime(0.0001, now + startAt);
+      master.gain.exponentialRampToValueAtTime(peak, now + startAt + 0.012);
+      master.gain.exponentialRampToValueAtTime(0.0001, now + startAt + dur);
+      master.connect(audioCtx.destination);
 
-    for (const [type, gainLevel, detune] of [
-      ["square", 0.55, 0],
-      ["sawtooth", 0.35, -8],
-    ]) {
-      const osc = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, now);
-      osc.detune.setValueAtTime(detune, now);
-      g.gain.setValueAtTime(gainLevel, now);
-      osc.connect(g);
-      g.connect(master);
-      osc.start(now);
-      osc.stop(now + 0.34);
+      for (const [type, level, detune] of [
+        ["square", 0.9, 0],
+        ["sawtooth", 0.6, -14],
+      ]) {
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, now + startAt);
+        osc.detune.setValueAtTime(detune, now + startAt);
+        g.gain.value = level;
+        osc.connect(g);
+        g.connect(master);
+        osc.start(now + startAt);
+        osc.stop(now + startAt + dur + 0.02);
+      }
     }
 
+    blip(0, 1.6, 0.22);
+    blip(0.26, 1.45, 0.18);
+
     if (navigator.vibrate) {
-      navigator.vibrate([50, 30, 50]);
+      navigator.vibrate([70, 40, 70]);
     }
   }
 
