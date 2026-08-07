@@ -15,7 +15,7 @@
       href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=3" />
+    <link rel="stylesheet" href="styles.css?v=4" />
   </head>
   <body>
     <main class="app">
@@ -24,7 +24,19 @@
 
       <div class="timer" id="timer" aria-live="polite">
         <span class="timer__fill" id="fill" data-phase="on"></span>
-        <span class="timer__time" id="time">1:00</span>
+        <input
+          class="timer__time"
+          id="time"
+          type="text"
+          inputmode="numeric"
+          enterkeyhint="done"
+          autocomplete="off"
+          spellcheck="false"
+          maxlength="5"
+          value="1:00"
+          readonly
+          aria-label="Current interval time"
+        />
       </div>
 
       <label class="next" id="nextBlock">
@@ -50,6 +62,6 @@
         <p class="hint" id="hint">hold start to reset</p>
       </div>
     </main>
-    <script src="app.js?v=3"></script>
+    <script src="app.js?v=4"></script>
   </body>
 </html>

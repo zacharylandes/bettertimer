@@ -134,7 +134,12 @@ body {
   position: relative;
   z-index: 1;
   display: block;
+  width: 100%;
   margin: 0;
+  padding: 0.5rem;
+  border: none;
+  background: transparent;
+  font-family: inherit;
   font-size: clamp(4rem, 20vw, 6.5rem);
   font-weight: 800;
   letter-spacing: -0.06em;
@@ -142,6 +147,31 @@ body {
   color: var(--ink);
   text-align: center;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.25);
+  caret-color: var(--ink);
+  -webkit-appearance: none;
+  appearance: none;
+  -webkit-user-select: text;
+  user-select: text;
+  pointer-events: none;
+}
+
+.timer__time.is-editable {
+  pointer-events: auto;
+  cursor: text;
+}
+
+.timer__time.is-editing {
+  text-shadow: none;
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 1rem;
+}
+
+.timer__time:focus {
+  outline: none;
+}
+
+.timer__time:read-only {
+  cursor: default;
 }
 
 .next {
