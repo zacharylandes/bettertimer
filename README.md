@@ -13,4 +13,6 @@ docker run --rm -p 8080:80 bettertimer
 
 ## Deploy
 
-Pushes to `main` auto-deploy via Coolify to https://timer.zacharylandes.com
+Live: https://timer.zacharylandes.com
+
+Pushes to `main` trigger Coolify redeploy via GitHub webhook.
