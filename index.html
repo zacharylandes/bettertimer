@@ -22,36 +22,32 @@
       <p class="brand">bettertimer</p>
       <p class="phase" id="phase" aria-live="polite">ON</p>
 
-      <div
-        class="timer"
-        id="timer"
-        role="button"
-        tabindex="0"
-        aria-label="Start or pause timer. Long press to reset."
-      >
+      <div class="timer" id="timer" aria-live="polite">
         <span class="timer__fill" id="fill" data-phase="on"></span>
+        <span class="timer__time" id="time">1:00</span>
+      </div>
+
+      <label class="next" id="nextBlock">
+        <span class="next__label" id="nextLabel">Next off</span>
         <input
-          class="timer__time"
-          id="time"
+          class="next__time"
+          id="nextTime"
           type="text"
           inputmode="numeric"
           enterkeyhint="done"
           autocomplete="off"
           spellcheck="false"
           maxlength="5"
-          value="1:00"
-          readonly
-          aria-label="Interval duration"
+          value="0:45"
+          aria-label="Upcoming interval duration"
         />
-      </div>
+      </label>
+
+      <button type="button" class="control" id="control">Start</button>
 
       <div class="meta">
         <span class="lap" id="lap">Lap 0</span>
-        <p class="hint" id="hint">tap to start · hold to reset</p>
-        <div class="accent-row" aria-hidden="true">
-          <span class="a"></span>
-          <span class="b"></span>
-        </div>
+        <p class="hint" id="hint">hold start to reset</p>
       </div>
     </main>
     <script src="app.js"></script>

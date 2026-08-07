@@ -1,15 +1,21 @@
 (() => {
   const LONG_PRESS_MS = 600;
+  const DEFAULT_ON_MS = 60_000;
+  const DEFAULT_OFF_MS = 45_000;
 
   const phaseEl = document.getElementById("phase");
   const timerEl = document.getElementById("timer");
   const fillEl = document.getElementById("fill");
   const timeEl = document.getElementById("time");
+  const nextBlock = document.getElementById("nextBlock");
+  const nextLabel = document.getElementById("nextLabel");
+  const nextTime = document.getElementById("nextTime");
+  const controlEl = document.getElementById("control");
   const lapEl = document.getElementById("lap");
   const hintEl = document.getElementById("hint");
 
-  let onMs = 60_000;
-  let offMs = 45_000;
+  let onMs = DEFAULT_ON_MS;
+  let offMs = DEFAULT_OFF_MS;
 
   /** @type {"idle" | "running" | "paused"} */
   let status = "idle";
@@ -20,15 +26,21 @@
   let lastTick = 0;
   let rafId = 0;
   let audioCtx = null;
-  let editing = false;
+  let editingNext = false;
 
   let pressTimer = null;
   let longPressed = false;
-  let pointerId = null;
-  let ignoreToggle = false;
 
   function phaseDuration() {
     return phase === "on" ? onMs : offMs;
+  }
+
+  function upcomingPhase() {
+    return phase === "on" ? "off" : "on";
+  }
+
+  function upcomingDuration() {
+    return upcomingPhase() === "on" ? onMs : offMs;
   }
 
   function formatTime(ms) {
@@ -55,7 +67,6 @@
 
     const asNum = Number(text);
     if (!Number.isFinite(asNum) || asNum <= 0) return null;
-    // bare numbers: treat as seconds if <= 599, else mmss (e.g. 145 → 1:45)
     if (text.length >= 3 && asNum > 59) {
       const m = Math.floor(asNum / 100);
       const s = asNum % 100;
@@ -116,77 +127,61 @@
     timerEl.classList.add("is-flash");
   }
 
-  function syncEditability() {
-    const editable = status !== "running";
-    timeEl.readOnly = !editable;
-    timeEl.classList.toggle("is-editable", editable);
-    timeEl.tabIndex = editable ? 0 : -1;
-  }
-
-  function render() {
-    if (!editing) {
-      const duration = phaseDuration();
-      const remaining = Math.max(0, duration - phaseElapsed);
-      const progress = Math.min(1, phaseElapsed / duration);
-      timeEl.value = formatTime(remaining);
-      fillEl.style.height = `${progress * 100}%`;
-    }
-
-    fillEl.dataset.phase = phase;
-    phaseEl.textContent = phase.toUpperCase();
-    phaseEl.classList.toggle("is-on", phase === "on");
-    phaseEl.classList.toggle("is-off", phase === "off");
-    lapEl.textContent = `Lap ${laps}`;
-    syncEditability();
-
-    if (editing) {
-      hintEl.textContent = "enter duration · done to save";
-    } else if (status === "idle") {
-      hintEl.textContent = "tap time to edit · tap to start · hold reset";
-    } else if (status === "running") {
-      hintEl.textContent = "tap to pause · hold to reset";
-    } else {
-      hintEl.textContent = "tap time to edit · tap to resume · hold reset";
-    }
-  }
-
-  function applyEditedDuration() {
-    const ms = parseTime(timeEl.value);
+  function applyNextDuration() {
+    const ms = parseTime(nextTime.value);
     if (ms == null) {
-      timeEl.value = formatTime(Math.max(0, phaseDuration() - phaseElapsed));
+      nextTime.value = formatTime(upcomingDuration());
       return false;
     }
-    if (phase === "on") onMs = ms;
+    if (upcomingPhase() === "on") onMs = ms;
     else offMs = ms;
-    phaseElapsed = 0;
     return true;
   }
 
-  function startEditing(e) {
-    if (status === "running") return;
-    e?.stopPropagation();
-    editing = true;
-    ignoreToggle = true;
-    clearPressTimer();
-    timeEl.readOnly = false;
-    timeEl.classList.add("is-editable", "is-editing");
-    timeEl.focus();
-    timeEl.select();
-    hintEl.textContent = "enter duration · done to save";
+  function finishNextEdit(commit) {
+    if (!editingNext) return;
+    editingNext = false;
+    nextBlock.classList.remove("is-editing");
+    if (commit) applyNextDuration();
+    else nextTime.value = formatTime(upcomingDuration());
+    nextTime.blur();
+    render();
   }
 
-  function finishEditing(commit) {
-    if (!editing) return;
-    editing = false;
-    timeEl.classList.remove("is-editing");
-    if (commit) applyEditedDuration();
-    else timeEl.value = formatTime(Math.max(0, phaseDuration() - phaseElapsed));
-    timeEl.blur();
-    render();
-    // prevent the blur/tap from also toggling start
-    setTimeout(() => {
-      ignoreToggle = false;
-    }, 0);
+  function render() {
+    const duration = phaseDuration();
+    const remaining = Math.max(0, duration - phaseElapsed);
+    const progress = duration > 0 ? Math.min(1, phaseElapsed / duration) : 0;
+    const next = upcomingPhase();
+
+    timeEl.textContent = formatTime(remaining);
+    fillEl.style.height = `${progress * 100}%`;
+    fillEl.dataset.phase = phase;
+
+    phaseEl.textContent = phase.toUpperCase();
+    phaseEl.classList.toggle("is-on", phase === "on");
+    phaseEl.classList.toggle("is-off", phase === "off");
+
+    nextLabel.textContent = `Next ${next}`;
+    nextBlock.classList.toggle("is-on", next === "on");
+    nextBlock.classList.toggle("is-off", next === "off");
+    if (!editingNext) nextTime.value = formatTime(upcomingDuration());
+
+    lapEl.textContent = `Lap ${laps}`;
+
+    if (status === "running") {
+      controlEl.textContent = "Pause";
+      controlEl.classList.add("is-running");
+      hintEl.textContent = "hold pause to reset";
+    } else if (status === "paused") {
+      controlEl.textContent = "Resume";
+      controlEl.classList.remove("is-running");
+      hintEl.textContent = "edit next · hold to reset";
+    } else {
+      controlEl.textContent = "Start";
+      controlEl.classList.remove("is-running");
+      hintEl.textContent = "edit next · hold start to reset";
+    }
   }
 
   function advancePhase() {
@@ -219,7 +214,7 @@
   }
 
   function start() {
-    if (editing) finishEditing(true);
+    if (editingNext) finishNextEdit(true);
     ensureAudio();
     status = "running";
     lastTick = 0;
@@ -237,21 +232,20 @@
   }
 
   function reset() {
-    if (editing) finishEditing(false);
+    if (editingNext) finishNextEdit(false);
     status = "idle";
     phase = "on";
     laps = 0;
     phaseElapsed = 0;
     lastTick = 0;
-    onMs = 60_000;
-    offMs = 45_000;
+    onMs = DEFAULT_ON_MS;
+    offMs = DEFAULT_OFF_MS;
     cancelAnimationFrame(rafId);
     rafId = 0;
     render();
   }
 
   function toggle() {
-    if (ignoreToggle || editing) return;
     if (status === "running") pause();
     else start();
   }
@@ -263,78 +257,42 @@
     }
   }
 
-  function isTimeTarget(target) {
-    return target === timeEl || timeEl.contains?.(target);
-  }
-
-  function onPointerDown(e) {
+  controlEl.addEventListener("pointerdown", (e) => {
     if (e.button != null && e.button !== 0) return;
-    if (isTimeTarget(e.target) && status !== "running") {
-      startEditing(e);
-      return;
-    }
-    if (editing) return;
-
-    pointerId = e.pointerId;
     longPressed = false;
-    timerEl.setPointerCapture?.(pointerId);
     clearPressTimer();
     pressTimer = setTimeout(() => {
       longPressed = true;
       reset();
       if (navigator.vibrate) navigator.vibrate([20, 40, 20]);
     }, LONG_PRESS_MS);
-  }
+  });
 
-  function onPointerUp(e) {
-    if (editing) return;
-    if (pointerId != null && e.pointerId !== pointerId) return;
+  controlEl.addEventListener("pointerup", () => {
     clearPressTimer();
-    if (!longPressed && !ignoreToggle) toggle();
-    pointerId = null;
-  }
-
-  function onPointerCancel() {
-    clearPressTimer();
-    pointerId = null;
-  }
-
-  timerEl.addEventListener("pointerdown", onPointerDown);
-  timerEl.addEventListener("pointerup", onPointerUp);
-  timerEl.addEventListener("pointercancel", onPointerCancel);
-  timerEl.addEventListener("lostpointercapture", onPointerCancel);
-  timerEl.addEventListener("contextmenu", (e) => e.preventDefault());
-
-  timerEl.addEventListener("keydown", (e) => {
-    if (editing) return;
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      toggle();
-    }
+    if (!longPressed) toggle();
   });
 
-  timeEl.addEventListener("pointerdown", (e) => {
-    if (status !== "running") {
-      e.stopPropagation();
-      startEditing(e);
-    }
+  controlEl.addEventListener("pointercancel", clearPressTimer);
+  controlEl.addEventListener("pointerleave", clearPressTimer);
+  controlEl.addEventListener("contextmenu", (e) => e.preventDefault());
+
+  nextTime.addEventListener("focus", () => {
+    editingNext = true;
+    nextBlock.classList.add("is-editing");
+    nextTime.select();
   });
 
-  timeEl.addEventListener("focus", (e) => {
-    if (status !== "running" && !editing) startEditing(e);
-  });
+  nextTime.addEventListener("blur", () => finishNextEdit(true));
 
-  timeEl.addEventListener("blur", () => finishEditing(true));
-
-  timeEl.addEventListener("keydown", (e) => {
+  nextTime.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      finishEditing(true);
+      finishNextEdit(true);
     } else if (e.key === "Escape") {
       e.preventDefault();
-      finishEditing(false);
+      finishNextEdit(false);
     }
-    e.stopPropagation();
   });
 
   document.addEventListener("visibilitychange", () => {
