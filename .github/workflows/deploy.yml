@@ -15,7 +15,7 @@ jobs:
           COOLIFY_APP_UUID: ${{ secrets.COOLIFY_APP_UUID }}
         run: |
           set -euo pipefail
-          curl -fsS -X GET \
+          curl -fsS -X POST \
             "${COOLIFY_URL}/api/v1/deploy?uuid=${COOLIFY_APP_UUID}&force=false" \
             -H "Authorization: Bearer ${COOLIFY_TOKEN}" \
             -H "Accept: application/json"
