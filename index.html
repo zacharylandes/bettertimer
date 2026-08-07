@@ -22,15 +22,28 @@
       <p class="brand">bettertimer</p>
       <p class="phase" id="phase" aria-live="polite">ON</p>
 
-      <button
-        type="button"
+      <div
         class="timer"
         id="timer"
+        role="button"
+        tabindex="0"
         aria-label="Start or pause timer. Long press to reset."
       >
         <span class="timer__fill" id="fill" data-phase="on"></span>
-        <span class="timer__time" id="time">1:00</span>
-      </button>
+        <input
+          class="timer__time"
+          id="time"
+          type="text"
+          inputmode="numeric"
+          enterkeyhint="done"
+          autocomplete="off"
+          spellcheck="false"
+          maxlength="5"
+          value="1:00"
+          readonly
+          aria-label="Interval duration"
+        />
+      </div>
 
       <div class="meta">
         <span class="lap" id="lap">Lap 0</span>
