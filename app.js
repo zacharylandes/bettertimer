@@ -257,9 +257,19 @@
     }
   }
 
+  controlEl.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (longPressed) {
+      longPressed = false;
+      return;
+    }
+    toggle();
+  });
+
   controlEl.addEventListener("pointerdown", (e) => {
     if (e.button != null && e.button !== 0) return;
     longPressed = false;
+    controlEl.setPointerCapture?.(e.pointerId);
     clearPressTimer();
     pressTimer = setTimeout(() => {
       longPressed = true;
@@ -268,13 +278,8 @@
     }, LONG_PRESS_MS);
   });
 
-  controlEl.addEventListener("pointerup", () => {
-    clearPressTimer();
-    if (!longPressed) toggle();
-  });
-
+  controlEl.addEventListener("pointerup", clearPressTimer);
   controlEl.addEventListener("pointercancel", clearPressTimer);
-  controlEl.addEventListener("pointerleave", clearPressTimer);
   controlEl.addEventListener("contextmenu", (e) => e.preventDefault());
 
   nextTime.addEventListener("focus", () => {
